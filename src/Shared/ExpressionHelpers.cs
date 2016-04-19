@@ -73,11 +73,15 @@ namespace System.Linq.Expressions
                 Type thisType = query.Provider.GetType();
 
                 // Get the CreateQuery method information who accepts generic type
-                MethodInfo method = thisType.GetMethods()
+                InterfaceMapping mapping = thisType.GetInterfaceMap(typeof(IQueryProvider));
+                MethodInfo method = typeof(IQueryProvider).GetMethods()
                     .Single(m => m.Name == MethodNameOfCreateQuery && m.IsGenericMethodDefinition);
+                int index = Array.IndexOf(mapping.InterfaceMethods, method);
+                MethodInfo implementation = mapping.TargetMethods[index];
+
 
                 // Replace method generic type with specified type.
-                MethodInfo generic = method.MakeGenericMethod(elementType);
+                MethodInfo generic = implementation.MakeGenericMethod(elementType);
                 countQuery = generic.Invoke(query.Provider, new object[] { expression });
             }
 
